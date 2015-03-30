@@ -7,6 +7,15 @@
 * AUTHOER: Blaise Barney 
 * LAST REVISED: 04/13/05
 ******************************************************************************/
+
+
+/******************************************************************************
+* Bug: rank 2 does a blocking send, but will run into a MPI_Waitall() 
+*
+* Fix: move MPI_Waitall() inside rank 3 so that rank 2 avoid running 
+*      into  MPI_Waitall()
+*******************************************************************************/
+
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -95,12 +104,13 @@ if (rank > 1) {
       if ((i+1)%DISP == 0)
         printf("Task %d has done %d irecvs\n", rank, i+1);
       }
+  /* Wait for all non-blocking operations to complete and record time */
+    MPI_Waitall(nreqs, reqs, stats);
     }
-
   }
 
 /* Wait for all non-blocking operations to complete and record time */
-MPI_Waitall(nreqs, reqs, stats);
+// MPI_Waitall(nreqs, reqs, stats);
 T2 = MPI_Wtime();     /* end time */
 MPI_Barrier(COMM);
 
