@@ -6,6 +6,13 @@
 * SOURCE: Blaise Barney 
 * LAST REVISED: 01/24/09
 ******************************************************************************/
+
+/******************************************************************************
+* Bug: MPI_Irecv / MPI_Isend datatype mismatch 
+* 
+* Fix: change MPI_FLOAT in MPI_Irecv to MPI_INT
+*****************************************************************************/
+
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>

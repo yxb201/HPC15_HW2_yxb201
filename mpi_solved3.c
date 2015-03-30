@@ -6,6 +6,13 @@
 * SOURCE: Blaise Barney 
 * LAST REVISED: 04/13/05
 ******************************************************************************/
+
+/*****************************************************************************
+* Bug: missing MPI_Init() and MPI_Finalize()
+*
+* Fix: add MPI_Init() and MPI_Finalize()
+*****************************************************************************/
+
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,7 +25,7 @@ int main (int argc, char *argv[])
 {
 int   numtasks, taskid, rc, dest, offset, i, j, tag1,
       tag2, source, chunksize; 
-double mysum, sum; // changes from float to double to prevent overflow.
+float mysum, sum; 
 float update(int myoffset, int chunk, int myid);
 MPI_Status status;
 
