@@ -5,6 +5,16 @@
 * AUTHOER: Blaise Barney
 * LAST REVISED: 01/24/09
 ******************************************************************************/
+
+
+/*******************************************************************************
+* Bug: The program hangs. In MPI_Bast(), count should be the number entries
+       in the buffer
+* Fix: set count = 1
+*****************************************************************************/
+
+
+
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,7 +32,8 @@ MPI_Get_processor_name(hostname, &len);
 printf ("Task %d on %s starting...\n", taskid, hostname);
 buffer = 23;
 root = 0;
-count = taskid;
+// count = taskid;
+count = 1;
 if (taskid == root)
    printf("Root: Number of MPI tasks is: %d\n",numtasks);
 

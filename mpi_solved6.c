@@ -70,6 +70,8 @@ if (rank < 2) {
 /* Do the non-blocking send and receive operations */
   for (i=0; i<REPS; i++) {
     MPI_Isend(&rank, 1, MPI_INT, dest, tag1, COMM, &reqs[offset]);
+    
+    printf("my rank %d\n", rank);
     MPI_Irecv(&buf, 1, MPI_INT, src, tag1, COMM, &reqs[offset+1]);
     offset += 2;
     if ((i+1)%DISP == 0)
