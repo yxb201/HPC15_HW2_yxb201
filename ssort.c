@@ -21,11 +21,15 @@ static int compare(const void *a, const void *b)
 
 int main( int argc, char *argv[])
 {
-  int rank, numProc;
-  int i, N;
-  int *vec;
-  int *Splitter, *AllSplitter;
+  int rank, numProc, newN;
+  int i, j, N;
+  int *vec, *newvec;
+  int *Splitter, *CandidateSplitter;
+  int *sBucket, *rBucket; 
+  int *sdispls, *rdispls;
   int Root = 0;
+  double T1, T2;  
+
 
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -33,7 +37,7 @@ int main( int argc, char *argv[])
   
   /* Number of random numbers per processor (this should be increased
    * for actual tests or could be passed in through the command line */
-  N = 100;
+  N = 100000;
 
   vec = calloc(N, sizeof(int));
   /* seed random number generator differently on every core */
@@ -43,26 +47,31 @@ int main( int argc, char *argv[])
   for (i = 0; i < N; ++i) {
     vec[i] = rand();
   }
-  printf("rank: %d, first entry: %d\n", rank, vec[0]);
+
+  /*  printf("rank: %d, first entry: %d\n", rank, vec[0]); */
 
 
-  /* STEP1: sort locally */
+  /* start the clock */
+  T1 = MPI_Wtime(); 
+
+  /* STEP 1: sort locally */
   qsort(vec, N, sizeof(int), compare);
   
-  /* 
-  if (rank == 0){
+  /* debugging msg
+  if (rank == 1){
     for (i = 0; i < N; i++){
         printf("v[%d] = %d \n", i,  vec[i]);	
     }
   }
-  */
+  */ 
 
-  /* STEP2: draw S=P-1 local splitters  */	
+  /* STEP 2: draw S=P-1 local splitters  */	
   Splitter = (int *) malloc( sizeof(int) * (numProc-1) );
   for (i = 0; i < numProc-1 ; i ++){
       Splitter[i] = vec[N/numProc * (i+1)];
   } 
   
+  /* debugging msg */
   /*
   if(rank == 0){
       for(i=0; i<numProc-1 ; i++){
@@ -71,63 +80,156 @@ int main( int argc, char *argv[])
   }
   */
 
-  /* STEP3: every processor send local splitters to root */
-  AllSplitter = (int *) malloc( sizeof(int) * (numProc-1) * numProc );
-  MPI_Gather( Splitter, numProc-1, MPI_INT, AllSplitter, numProc-1,
+  /* STEP 3: every processor send local splitters to root */
+  CandidateSplitter = (int *) malloc( sizeof(int) * (numProc-1) * numProc );
+  MPI_Gather( Splitter, numProc-1, MPI_INT, CandidateSplitter, numProc-1,
                                    MPI_INT, Root, MPI_COMM_WORLD  );
 
-  /* STEP4: Root sort all splitters and pick global splitters */
+  /* STEP 4: Root sort all splitters and pick global splitters */
   if (rank == Root){
-     qsort(AllSplitter, numProc*(numProc-1), sizeof(int), compare);
+     qsort(CandidateSplitter, numProc*(numProc-1), sizeof(int), compare);
      
-     /*
+     /* debugging msg
      for (i = 0; i < numProc*(numProc-1) ; i++  ){
-         printf("AllSplitter[%d] = %d\n", i, AllSplitter[i]); 
+         printf("CandidateSplitter[%d] = %d\n", i, CandidateSplitter[i]); 
      }
      */
      
-     
+     /* pick global splitters */ 
      for(i = 0; i < numProc-1; i++){
-         Splitter[i] = AllSplitter[ numProc/2 + numProc * i  ];
+         Splitter[i] = CandidateSplitter[ numProc/2 + numProc * i  ];
      }
 
-     /*
+     /* debugging msg */
+     
      if(rank == 0){
          for(i=0; i<numProc-1 ; i++){
               printf("Global Splitter[%d] = %d \n", i, Splitter[i] );
          }
      }    
-     */
+      
 
   }
 
   /* STEP 5: Broadcast Global Splitter to every processor */
   MPI_Bcast(Splitter, numProc-1, MPI_INT, Root, MPI_COMM_WORLD);
 
-  /* randomly sample s entries from vector or select local splitters,
-   * i.e., every N/P-th entry of the sorted vector */
+  /* STEP 6: Each processor uses splitters to decide which integer 
+             to be sent to which processor */
+  rBucket = (int *) calloc( numProc, sizeof(int) );
+  sBucket = (int *) calloc( numProc, sizeof(int) );
+ 
+  /* determine how many integers are sent to every processor */
+  j = 0; 
+  for (i = 0; i < N; i++){
+      if (j < numProc - 1){
+          if ( vec[i] < Splitter[j] ){
+              sBucket[j]++;
+          }
+          else{
+              j++;
+              sBucket[j]++;
+          }
+      }
+      else{
+          sBucket[numProc-1]++;
+      }
+  }
+  
+  /* debugging msg
+  if(rank == 2){
+      for(i=0; i<numProc ; i++){
+          printf("sBucket[%d] = %d \n", i, sBucket[i] );
+      }
+  } 
+  */ 
 
-  /* every processor communicates the selected entries
-   * to the root processor; use for instance an MPI_Gather */
+  /* STEP 7: all-to-all communcation to fill the reciver bucket: 
+             rBucket[j] = # of integers to expect from processor j  */
 
-  /* root processor does a sort, determinates splitters that
-   * split the data into P buckets of approximately the same size */
+  MPI_Alltoall(sBucket, 1, MPI_INT, rBucket, 1, MPI_INT, MPI_COMM_WORLD);
+  
+  /* debugging msg 
+  if(rank == 1){
+      for(i=0; i<numProc ; i++){
+           printf("rBucket[%d] = %d \n", i, rBucket[i] );
+      }
+  }
+  */
+  
+  
+  /* STEP 8: all-to-all communication to send entries to the relevant
+             processor */
+  sdispls = (int *) calloc(numProc, sizeof(int));
+  rdispls = (int *) calloc(numProc, sizeof(int));
 
-  /* root process broadcasts splitters */
+  /* calculate send/recv displacement */
+  for (i = 1; i < numProc; i++ ){
+      sdispls[i] = sdispls[i-1] +  sBucket[i-1];
+      rdispls[i] = rdispls[i-1] +  rBucket[i-1]; 
+  }
+  
 
-  /* every processor uses the obtained splitters to decide
-   * which integers need to be sent to which other processor (local bins) */
+  /* debugging msg 
+  if(rank == 2){
+      for(i=0; i<numProc ; i++){
+          printf("sdispls[%d] = %d \n", i, sdispls[i] );
+          printf("rdispls[%d] = %d \n", i, rdispls[i] );
+      }
+  }
+  */ 
+ 
+  /* construct newvec for sorting */
+  newN = 0;
+  for(i = 0; i < numProc; i++){
+     newN = newN + rBucket[i];
+  }
+  newvec = (int *) malloc( sizeof(int) * newN );
 
-  /* send and receive: either you use MPI_AlltoallV, or
-   * (and that might be easier), use an MPI_Alltoall to share
-   * with every processor how many integers it should expect,
-   * and then use MPI_Send and MPI_Recv to exchange the data */
+  MPI_Alltoallv( vec,    sBucket, sdispls, MPI_INT, 
+                 newvec, rBucket, rdispls, MPI_INT, MPI_COMM_WORLD );
 
-  /* do a local sort */
+ 
+ 
+  /* STEP 9: finally locally sort newvec */
+  qsort(newvec, newN, sizeof(int), compare  ); 
+  
+  /* debugging msg
+  if(rank == 2){ 
+      for(i=0; i< newN; i++)
+         printf("newv[%d] = %d\n", i , newvec[i] ); 
+  }
+  */
 
-  /* every processor writes its result to a file */
+  /* stop the clock */
+  T2 = MPI_Wtime();
 
+  printf("rank = %d, elapsed time is %f\n", rank, T2-T1);
+
+  /* STEP 10: print to file */
+  FILE* fd = NULL;
+  char filename[256];
+  snprintf(filename, 256, "samplesort%03d.txt", rank);
+  fd = fopen(filename, "w+");
+
+  if (NULL == fd){
+      printf("Error opening file \n");
+      return 1;
+  }
+
+  for ( i = 0 ; i < newN ; i++ ){
+      fprintf(fd, "v[%d] = %d\n", i+1, newvec[i]);
+  }
+
+ 
   free(vec);
+  free(newvec);
+  free(CandidateSplitter);
+  free(sBucket);
+  free(rBucket);
+  free(sdispls);
+  free(rdispls);
+   
   MPI_Finalize();
   return 0;
 }
