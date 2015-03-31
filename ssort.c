@@ -80,22 +80,25 @@ int main( int argc, char *argv[])
   if (rank == Root){
      qsort(AllSplitter, numProc*(numProc-1), sizeof(int), compare);
      
-     
+     /*
      for (i = 0; i < numProc*(numProc-1) ; i++  ){
          printf("AllSplitter[%d] = %d\n", i, AllSplitter[i]); 
      }
+     */
      
      
      for(i = 0; i < numProc-1; i++){
          Splitter[i] = AllSplitter[ numProc/2 + numProc * i  ];
      }
 
+     /*
      if(rank == 0){
          for(i=0; i<numProc-1 ; i++){
               printf("Global Splitter[%d] = %d \n", i, Splitter[i] );
          }
      }    
-     
+     */
+
   }
 
   /* STEP 5: Broadcast Global Splitter to every processor */
