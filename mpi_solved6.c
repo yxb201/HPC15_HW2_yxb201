@@ -12,7 +12,7 @@
 /******************************************************************************
 * Bug: rank 2 does a blocking send, but will run into a MPI_Waitall() 
 *
-* Fix: move MPI_Waitall() inside rank 3 so that rank 2 avoid running 
+* Fix: make rank 2 avoid running 
 *      into  MPI_Waitall()
 *******************************************************************************/
 
@@ -63,15 +63,13 @@ if (rank < 2) {
     }
   if (rank == 1) {
     src = 0;
-    offset = REPS;
+    offset = 0 ; // offest = REPS error?
     }
   dest = src;
 
 /* Do the non-blocking send and receive operations */
   for (i=0; i<REPS; i++) {
     MPI_Isend(&rank, 1, MPI_INT, dest, tag1, COMM, &reqs[offset]);
-    
-    printf("my rank %d\n", rank);
     MPI_Irecv(&buf, 1, MPI_INT, src, tag1, COMM, &reqs[offset+1]);
     offset += 2;
     if ((i+1)%DISP == 0)
@@ -106,13 +104,14 @@ if (rank > 1) {
       if ((i+1)%DISP == 0)
         printf("Task %d has done %d irecvs\n", rank, i+1);
       }
-  /* Wait for all non-blocking operations to complete and record time */
-    MPI_Waitall(nreqs, reqs, stats);
     }
   }
 
 /* Wait for all non-blocking operations to complete and record time */
-// MPI_Waitall(nreqs, reqs, stats);
+/* rank 2 should not run into MPI_Waitall */
+if (rank != 2){
+    MPI_Waitall(nreqs, reqs, stats);
+}
 T2 = MPI_Wtime();     /* end time */
 MPI_Barrier(COMM);
 
