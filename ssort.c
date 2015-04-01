@@ -223,7 +223,7 @@ int main( int argc, char *argv[])
   char sorted_output[256];
   char timing[256];
   snprintf(sorted_output, 256, "ssort%03d.txt", rank);
-  snprintf(timing, 256, "ssort_timing.txt");
+  snprintf(timing, 256, "ssort_timing%03d.txt", numProc);
   fd1 = fopen(sorted_output, "w+");
   fd2 = fopen(timing, "a+");
 
