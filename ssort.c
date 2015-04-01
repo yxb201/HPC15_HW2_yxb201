@@ -224,6 +224,7 @@ int main( int argc, char *argv[])
  
   free(vec);
   free(newvec);
+  free(Splitter);
   free(CandidateSplitter);
   free(sBucket);
   free(rBucket);
