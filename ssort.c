@@ -204,7 +204,7 @@ int main( int argc, char *argv[])
   /* stop the clock */
   T2 = MPI_Wtime();
 
-  printf("rank = %d, elapsed time is %f\n", rank, T2-T1);
+  //printf("rank = %d, elapsed time is %f\n", rank, T2-T1);
 
   /* STEP 10: print to file */
   FILE* fd = NULL;
@@ -220,7 +220,7 @@ int main( int argc, char *argv[])
   for ( i = 0 ; i < newN ; i++ ){
       fprintf(fd, "v[%d] = %d\n", i+1, newvec[i]);
   }
-
+  fprintf(fd, "elapsed time of process %d = %f\n", rank, T2-T1);
  
   free(vec);
   free(newvec);
