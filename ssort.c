@@ -232,12 +232,13 @@ int main( int argc, char *argv[])
       return 1;
   }
   
-  fprintf(fd2, "t(%d) = %f\n", rank, T2-T1);
-  
+ 
   for ( i = 0 ; i < newN ; i++ ){
       fprintf(fd1, "v[%d] = %d\n", i+1, newvec[i]);
   }
- 
+  
+  fprintf(fd2, "t(%d) = %f\n", rank, T2-T1);
+  
   free(vec);
   free(newvec);
   free(Splitter);
