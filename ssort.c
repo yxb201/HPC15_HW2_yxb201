@@ -101,13 +101,13 @@ int main( int argc, char *argv[])
      }
 
      /* debugging msg */
-     
+     /* 
      if(rank == 0){
          for(i=0; i<numProc-1 ; i++){
               printf("Global Splitter[%d] = %d \n", i, Splitter[i] );
          }
      }    
-      
+     */ 
 
   }
 
@@ -204,23 +204,28 @@ int main( int argc, char *argv[])
   /* stop the clock */
   T2 = MPI_Wtime();
 
-  //printf("rank = %d, elapsed time is %f\n", rank, T2-T1);
+  printf("rank = %d, elapsed time is %f\n", rank, T2-T1);
 
   /* STEP 10: print to file */
-  FILE* fd = NULL;
-  char filename[256];
-  snprintf(filename, 256, "samplesort%03d.txt", rank);
-  fd = fopen(filename, "w+");
+  FILE* fd1 = NULL;
+  FILE* fd2 = NULL;
+  char sorted_output[256];
+  char timing[256];
+  snprintf(sorted_output, 256, "ssort%03d.txt", rank);
+  snprintf(timing, 256, "ssort_timing.txt");
+  fd1 = fopen(sorted_output, "w+");
+  fd2 = fopen(timing, "a+");
 
-  if (NULL == fd){
+  if (NULL == fd1 || NULL == fd2 ){
       printf("Error opening file \n");
       return 1;
   }
-
+  
+  fprintf(fd2, "t(%d) = %f\n", rank, T2-T1);
+  
   for ( i = 0 ; i < newN ; i++ ){
-      fprintf(fd, "v[%d] = %d\n", i+1, newvec[i]);
+      fprintf(fd1, "v[%d] = %d\n", i+1, newvec[i]);
   }
-  fprintf(fd, "elapsed time of process %d = %f\n", rank, T2-T1);
  
   free(vec);
   free(newvec);
