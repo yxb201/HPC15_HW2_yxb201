@@ -34,10 +34,21 @@ int main( int argc, char *argv[])
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &numProc);
+ 
+  if( argc != 2){
+      fprintf(stderr, "mush have only one argument: total length of the array!\n");
+      MPI_Abort(MPI_COMM_WORLD, 1);
+  }
   
-  /* Number of random numbers per processor (this should be increased
-   * for actual tests or could be passed in through the command line */
-  N = 100000;
+  int Ntotal = atoi(argv[1]);
+ 
+  if (Ntotal % numProc != 0 ){
+      fprintf(stderr, "# of proc must divide the total length of the array! \n");
+      MPI_Abort(MPI_COMM_WORLD, 1);
+  }
+ 
+  /* Number of random numbers per processor */
+  N = Ntotal/ numProc ;
 
   vec = calloc(N, sizeof(int));
   /* seed random number generator differently on every core */
