@@ -227,16 +227,16 @@ int main( int argc, char *argv[])
   fd1 = fopen(sorted_output, "w+");
   fd2 = fopen(timing, "a+");
 
-  if (NULL == fd1 || NULL == fd2 ){
+  if (NULL == fd1 || NULL== fd2 ){
       printf("Error opening file \n");
       return 1;
   }
   
- 
+/* 
   for ( i = 0 ; i < newN ; i++ ){
       fprintf(fd1, "v[%d] = %d\n", i+1, newvec[i]);
   }
-  
+*/  
   fprintf(fd2, "t(%d) = %f\n", rank, T2-T1);
   
   free(vec);
