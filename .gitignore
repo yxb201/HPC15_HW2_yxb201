@@ -7,3 +7,8 @@ mpi_solved6
 mpi_solved7
 ssort
 ssort*.txt
+*.aux
+*.dvi
+*.log
+*.pdf
+*.out

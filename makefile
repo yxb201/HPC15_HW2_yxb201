@@ -1,6 +1,8 @@
 CC=mpicc
 
-all: mpi_solved1 mpi_solved2 mpi_solved3 mpi_solved4 mpi_solved5 mpi_solved6 mpi_solved7 ssort
+all: mpi_solved1 mpi_solved2 mpi_solved3 mpi_solved4 mpi_solved5 mpi_solved6 mpi_solved7 \
+     ssort \
+     hw2writeup 
 
 mpi_solved1: mpi_solved1.c
 	$(CC) mpi_solved1.c -o mpi_solved1
@@ -26,5 +28,10 @@ mpi_solved7: mpi_solved7.c
 ssort: ssort.c
 	$(CC) ssort.c -o ssort
 
+hw2writeup: hw2writeup.tex
+	latex hw2writeup.tex
+	dvipdfm hw2writeup.dvi
+
+
 clean:
-	rm  mpi_solved1 mpi_solved2 mpi_solved3 mpi_solved4 mpi_solved5 mpi_solved6 mpi_solved7 ssort ssort*.txt 
+	rm  mpi_solved1 mpi_solved2 mpi_solved3 mpi_solved4 mpi_solved5 mpi_solved6 mpi_solved7 ssort ssort*.txt *.log *.aux *.pdf *.dvi *.out
