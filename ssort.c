@@ -36,19 +36,13 @@ int main( int argc, char *argv[])
   MPI_Comm_size(MPI_COMM_WORLD, &numProc);
  
   if( argc != 2){
-      fprintf(stderr, "mush have only one argument: total length of the array!\n");
+      fprintf(stderr, "mush have only one argument: the length of array on each processor!\n");
       MPI_Abort(MPI_COMM_WORLD, 1);
   }
   
-  int Ntotal = atoi(argv[1]);
- 
-  if (Ntotal % numProc != 0 ){
-      fprintf(stderr, "# of proc must divide the total length of the array! \n");
-      MPI_Abort(MPI_COMM_WORLD, 1);
-  }
  
   /* Number of random numbers per processor */
-  N = Ntotal/ numProc ;
+  N = atoi(argv[1]);
 
   vec = calloc(N, sizeof(int));
   /* seed random number generator differently on every core */
