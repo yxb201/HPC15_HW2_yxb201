@@ -37,69 +37,49 @@
 \begin{center}
 
 \large \textbf{%%
-High Performance Computing \\ Assignment \#1  \\ Yuan-Xun Bao \\ yxb201@nyu.edu \quad N13392943}
+High Performance Computing \\ Assignment \#2 \\ Yuan-Xun Bao \\ yxb201@nyu.edu \quad N13392943}
 \end{center}
 
 % ****************************
-\section{Github Repository}
+\section{Parallel Sample Sort}
 
-\verb|https://github.com/yxb201/HPC15_HW1_yxb201.git|
-
-\section{MPI Ring Communication}
-For passing an integer in a ring, I tested my program on a 2 GHz Intel Core i7 Macbook Pro.
-
-\noindent
-Test run: \verb|mpirun -np 3 ./int_ring 2|
-
-\begin{verbatim}
-Loop 1: I am rank 1. I received 0 from rank 0. I sent 1 to rank 2.
-Loop 1: I am rank 2. I received 1 from rank 1. I sent 3 to rank 0.
-Loop 1: I am rank 0. I received 3 from rank 2. I sent 0 to rank 1.
-Loop 2: I am rank 0. I received 6 from rank 2. I sent 3 to rank 1.
-Loop 2: I am rank 1. I received 3 from rank 0. I sent 4 to rank 2.
-Loop 2: I am rank 2. I received 4 from rank 1. I sent 6 to rank 0.
-\end{verbatim}
-
-\noindent
-To test the latency on my system: \verb|mpirun -np 4 ./int_ring 10000000|
-
-\begin{verbatim}
-Total elapsed time is 18.677320 seconds.
-Latency is 0.000000466934 seconds per send/receive.
-\end{verbatim}
-
-\noindent
-To test the bandwidth of the network, I sent a 2MB array in a ring among 4 machines:
-
-\noindent
-\verb|mpirun -np 4 -hosts box527,box534,crunchy1,crunchy3 ./array_ring 10|
-\begin{verbatim}
-Total time elapsed is 0.831853 seconds.
-Bandwidth of the network is 96.170874 MB/s.
-\end{verbatim}
-
-\section{Jacobi Smoother}
-To test the strong scalability of my program, I run it with 2, 4, 8, 16, 32 processors on \verb|crunchy1|. For each case, I run my code for 5 times and compute the average computational time. 
-\begin{verbatim}
-mpirun -np 8 ./jacobi-mpi 10000000 10
-\end{verbatim}
-
-\noindent
-The result is summarized in the following table:
+\subsection{Strong Scalability}
+To test the strong scalability of \verb|ssort|, we fix the total length of the array to be $NP = 2^{30} \approx 10^{10}$.
+With this input size, \verb|ssort| scales up to 128 processors. 
 
 \begin{center}
   \begin{tabular}{ | c | c | }
     \hline
-    \# of procs & avg timing of 5 runs in seconds  \\ \hline
-    2  & 0.8557976s  \\ \hline
-    4  & 0.3914874s \\ \hline
-    8  & 0.2454278s  \\ \hline
-    16 & 0.201233s \\ \hline
-    32 & 0.1416122s \\
+    \# of procs & avg timing per node  \\ \hline
+    16  & 18.3766s  \\ \hline
+    32  & 9.2225s \\ \hline
+    64  & 4.6401s  \\ \hline
+    128 & 2.7381s \\ \hline
+    256 & 2.2658s \\ \hline
+    512 & 2.7244s \\
     \hline
   \end{tabular}
 \end{center}
-It's much more difficult to parallelize Gauss-Seidal since $u_i^{(k+1)}$ needs values  $u_1^{(k+1)}, \dots, u_{i-1}^{(k+1)}$. Therefore, the processor to which $u_i^{(k+1)}$ belong has to wait until these values are available from other processors.
+
+\subsection{Weak Scalability}
+
+To test the weak scalability of \verb|ssort|, we fix the array length on each processor to be $N = 10^8$.
+As the number of processors doubles, the computational time per node only increases slightly due to more inter-processor communications.
+
+\begin{center}
+  \begin{tabular}{ | c | c | }
+    \hline
+    \# of procs & avg timing per node  \\ \hline
+    16  & 27.9859s  \\ \hline
+    32  & 29.2918s \\ \hline
+    64  & 30.2139s  \\ \hline
+    128 & 30.9417s \\ \hline
+    256 & 31.5131s \\ \hline
+    512 & 32.7298s \\
+    \hline
+  \end{tabular}
+\end{center}
+
 
 
 \end{document}
