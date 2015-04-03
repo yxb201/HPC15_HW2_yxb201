@@ -34,4 +34,4 @@ hw2writeup: hw2writeup.tex
 
 
 clean:
-	rm  mpi_solved1 mpi_solved2 mpi_solved3 mpi_solved4 mpi_solved5 mpi_solved6 mpi_solved7 ssort ssort*.txt *.log *.aux *.pdf *.dvi *.out
+	rm  mpi_solved1 mpi_solved2 mpi_solved3 mpi_solved4 mpi_solved5 mpi_solved6 mpi_solved7 ssort ssort*.txt *.log *.aux *.pdf *.dvi *.out *.tex~ *.tex.backup
