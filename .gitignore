@@ -12,4 +12,6 @@ ssort*.txt
 *.log
 *.pdf
 *.out
-*.tex~
+*.tex
+*.tex.backup
+~
